@@ -1,5 +1,6 @@
 from enum import Enum
 from abc import ABC, abstractmethod
+from typing import List
 
 
 # FileType Enum for type of files
@@ -44,23 +45,45 @@ class FileTypeFilter(Filter):
   def apply(self, file: File):
     return file.type == self.file_type
 
+# Combination filters
+class AndFilter(Filter):
+  def __init__(self, filters: List[Filter]):
+    self.filters = filters
+  
+  def apply(self, file: File):
+    return all(filter.apply(file) for filter in self.filters)
+
+class OrFilter(Filter):
+  def __init__(self, filters: List[Filter]):
+    self.filters = filters
+  
+  def apply(self, file: File):
+    return any(filter.apply(file) for filter in self.filters)
+
+class NotFilter(Filter):
+  def __init__(self, filter: Filter):
+    self.filter = filter
+  
+  def apply(self, file: File):
+    return not self.filter.apply(file)
+
 class NotADirectory(Exception):
   pass
 
 class FindCommand:
-  def findWithFilters(self, directory: File, filters):
+  def findWithFilters(self, directory: File, root_filter: Filter):
     if not directory.is_directory:
       raise NotADirectory(f"{directory.name} is not a directory")
     search_results = []
-    self.recurse(directory, filters, search_results)
+    self.recurse(directory, root_filter, search_results)
     return search_results
 
-  def recurse(self, directory, filters, search_results):
+  def recurse(self, directory: File, root_filter: Filter, search_results):
     for child in directory.children:
       if child.is_directory:
-        self.recurse(child, filters, search_results)
+        self.recurse(child, root_filter, search_results)
       else:
-        if all(filter.apply(child) for filter in filters):
+        if root_filter.apply(child):
           search_results.append(child)
 
 
@@ -75,9 +98,18 @@ if __name__ == "__main__":
     ])
   ])
 
+  base_filters = [MinSizeFilter(400), FileTypeFilter(FileType.LOG)]
+
+  mode = "NOT"
+
+  if mode == "AND":
+    combined_filter = AndFilter(base_filters)
+  elif mode == "OR":
+    combined_filter = OrFilter(base_filters)
+  elif mode == "NOT":
+    combined_filter = NotFilter(AndFilter(base_filters))
+
   cmd = FindCommand()
 
-  filters = [MinSizeFilter(400), FileTypeFilter(FileType.LOG)]
-
-  matches = cmd.findWithFilters(root, filters)
+  matches = cmd.findWithFilters(root, combined_filter)
   print(matches)
