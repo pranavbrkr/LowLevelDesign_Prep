@@ -110,10 +110,10 @@ class IdleState(VendingState):
     return product
 
   def insertCoins(self, machine, coins):
-    raise Exception("Self product first")
+    raise Exception("Select product first")
 
   def insertCard(self, machine, card_number):
-    raise Exception("Self product first")
+    raise Exception("Select product first")
   
   def cancel(self, machine):
     raise Exception("Nothing to cancel")
