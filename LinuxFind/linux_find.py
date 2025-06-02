@@ -17,7 +17,7 @@ class File:
     self.size = size
     self.type = type
     self.is_directory = is_directory
-    self.children = children or []
+    self.children = children or {}
 
   def __repr__(self):
     return f"<Name: {self.name}, size: {self.size}, type: {self.type.name}>"
@@ -79,7 +79,7 @@ class FindCommand:
     return search_results
 
   def recurse(self, directory: File, root_filter: Filter, search_results):
-    for child in directory.children:
+    for child in directory.children.values():
       if child.is_directory:
         self.recurse(child, root_filter, search_results)
       else:
@@ -88,15 +88,15 @@ class FindCommand:
 
 
 if __name__ == "__main__":
-  root = File("root", 0, FileType.DIRECTORY, True, [
-    File("a.txt", 1000, FileType.TEXT),
-    File("b.log", 800, FileType.LOG),
-    File("c.bin", 600, FileType.BINARY),
-    File("sub_dir", 0, FileType.DIRECTORY, True, [
-      File("d.log", 1100, FileType.LOG),
-      File("e.txt", 110, FileType.TEXT),
-    ])
-  ])
+  root = File("root", 0, FileType.DIRECTORY, True, {
+    "a.txt": File("a.txt", 1000, FileType.TEXT),
+    "b.log": File("b.log", 800, FileType.LOG),
+    "c.bin": File("c.bin", 600, FileType.BINARY),
+    "sub_dir": File("sub_dir", 0, FileType.DIRECTORY, True, {
+      "d.log": File("d.log", 1100, FileType.LOG),
+      "e.txt": File("e.txt", 110, FileType.TEXT),
+    })
+  })
 
   base_filters = [MinSizeFilter(400), FileTypeFilter(FileType.LOG)]
 
