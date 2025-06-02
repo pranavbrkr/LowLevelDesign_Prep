@@ -181,7 +181,7 @@ class VendingMachine:
   def __init__(self):
     self.inventory = {
       "A1": Product("A1", "Water", 1.0, 10),
-      "A2": Product("A2", "Soda", 1.5, 8),
+      "A2": Product("A2", "Soda", 2.5, 8),
       "A3": Product("A3", "Chips", 2.0, 5),
       "A4": Product("A4", "Candy Bar", 1.25, 7),
     }
@@ -211,8 +211,10 @@ if __name__ == "__main__":
   product = vm.selectProduct("A2", PaymentType.COIN)
   print(f"Selected product: {product.name}, price: ${product.price:.2f}")
 
-  vm.insertCoins([Coin.ONE, Coin.ONE])
-  print("Inserted coins: $2.00")
+  coins_used = [Coin.TWO, Coin.FIVE]
+  vm.insertCoins(coins_used)
+  inserted_total = sum(coin.value for coin in coins_used)
+  print(f"Inserted coins: ${inserted_total:.2f}")
 
   change = vm.dispense()
   print("Product dispensed. Change returned: ", [f"${c.value:.2f}" for c in change])
