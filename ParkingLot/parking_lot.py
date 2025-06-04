@@ -129,7 +129,7 @@ class FlatPricingStrategy(PricingStrategy):
 
 class HourlyRatePricing(PricingStrategy):
   def calculatePrice(self, ticket: Ticket):
-    duration = (ticket.in_time - ticket.out_time).seconds // 3600 + 1
+    duration = max(1, int((ticket.out_time - ticket.in_time).total_seconds() // 3600))
     return duration * 20
 
 
@@ -191,14 +191,13 @@ class ParkingLotService:
     print(f"Spot {spot.spot_id} - Level {level.level_number} assigned to Vehicle {vehicle.license_plate}")
   
 
-  def unparkVehicle(self, vehicle: Vehicle):
+  def unparkVehicle(self, vehicle: Vehicle, payment_manager: PaymentManager):
     ticket = self.ticket_manager.closeTicket(vehicle)
     if not ticket:
       print("No active ticket found")
       return
     
     self.parking_spot_manager.vacateSpot(ticket.spot)
-    payment_manager = PaymentManager(CardPayment(), HourlyRatePricing())
     payment_manager.performPayment(ticket)
 
 
@@ -222,4 +221,5 @@ if __name__ == "__main__":
   import time
   time.sleep(5)
 
-  parking_lot_service.unparkVehicle(vehicle2)
+  payment_manager = PaymentManager(CardPayment(), HourlyRatePricing())
+  parking_lot_service.unparkVehicle(vehicle2, payment_manager)
